@@ -12,8 +12,8 @@ class ColorDescriptor:
 		# the feature used to quantify the image
 		#return cv2.COLOR_RGB2HSV  #41
 		image = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
-		return image.shape
-		feature = []
+		#return image.shape#(300, 400, 3)
+		features = []
 
 		# grab the dimensions and compute the center of the image
 		(h, w) = image.shape[:2]
@@ -32,7 +32,7 @@ class ColorDescriptor:
 		#return axesX,axesY  #(150, 112)
 		
 		ellipMask = np.zeros(image.shape[:2], dtype = 'uint8')
-		#return ellipMask  #uint8 = unsigned int
+		#return ellipMask.shape#(300, 400)#uint8 = unsigned int
 		cv2.ellipse(ellipMask, (cX, cY), (axesX, axesY), 0, 0, 360, 255, -1)
 
 		# loop over the segments
@@ -41,11 +41,20 @@ class ColorDescriptor:
 			#return segments
 			cornerMask = np.zeros(image.shape[:2], dtype = 'uint8')
 			cv2.rectangle(cornerMask, (startX, startY), (endX, endY), 255, -1)
+			cornerMask = cv2.subtract(cornerMask, ellipMask)
+			
 			# extract a color histogram from the image, then update 
 			# the feature vector
 			hist = self.histogram(image, cornerMask)
-			return hist
-			feature.extend(hist)
+			#return hist
+			features.extend(hist)
+		# extract a color histogram from the elliptical region and
+		# update the feature vector
+		hist = self.histogram(image, ellipMask)
+		features.extend(hist)
+
+		# return the feature vector
+		return features
 
 	def histogram(self, image, mask):
 		# extract a 3D color histogram from the masked region on the
